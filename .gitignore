@@ -1,0 +1,38 @@
+# Datos y archivos pesados (no se versionan)
+*.xlsx
+*.xls
+*.csv
+*.sav
+*.rds
+*.RData
+*.Rhistory
+.Rproj.user/
+*.parquet
+*.zip
+*.db
+*.sqlite
+*.log
+*.bak
+~$*
+
+# Documentos generados
+*.docx
+*.pptx
+*.pdf
+
+# Secretos y entornos
+.env
+.env.*
+!.env.example
+credenciales*.json
+.Renviron
+.venv/
+venv/
+__pycache__/
+node_modules/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+rsconnect/
+!resultados/*.csv
+!manuscrito/*.pdf

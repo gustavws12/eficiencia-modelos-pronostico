@@ -1,0 +1,155 @@
+--- Entorno ---------------------------------------------------
+R: R version 4.3.3 (2024-02-29) 
+Filtro de Hamilton compilado (Rcpp): TRUE 
+Paquetes opcionales disponibles:
+  tsDyn    MSwM    bsts xgboost     gbm     MCS   torch 
+  FALSE   FALSE   FALSE   FALSE    TRUE   FALSE   FALSE 
+---------------------------------------------------------------
+
+PILOTO: 5 réplicas por celda, 15 orígenes, 2 núcleos
+
+Tareas totales: 50 (10 celdas)
+[18:06:46] tarea 1/50  D1a T=250 sigma=1.0 rep=1
+[18:07:57] tarea 5/50  D1a T=250 sigma=1.0 rep=5
+[18:09:16] tarea 10/50  D1b T=250 sigma=1.0 rep=5
+[18:10:54] tarea 15/50  D2 T=250 sigma=1.0 rep=5
+[18:12:20] tarea 20/50  D3 T=250 sigma=1.0 rep=5
+[18:13:58] tarea 25/50  D4 T=250 sigma=1.0 rep=5
+[18:15:13] tarea 30/50  D5 T=250 sigma=1.0 rep=5
+[18:16:51] tarea 35/50  D6a T=250 sigma=1.0 rep=5
+[18:18:06] tarea 40/50  D6b T=250 sigma=1.0 rep=5
+[18:19:47] tarea 45/50  D7 T=250 sigma=1.0 rep=5
+[18:21:15] tarea 50/50  D8 T=250 sigma=1.0 rep=5
+Terminado en 15.1 min | réplicas fallidas: 0
+
+Duración total: 15.1 min
+
+=== RMSE relativo a ARIMA (h = 1) ===
+
+-- AR(1) phi=0.5 --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+              MS-AR    0.899          0.987    0.538  0.960    0.16120
+ SETAR autoexcitado    0.904          0.993    0.535  0.960    0.03873
+    AR(p) bayesiano    0.905          0.994    0.512  0.960    0.01240
+       ARIMA (auto)    0.911          1.000    0.511  0.960    0.12733
+         Naive (RW)    0.973          1.069    0.567  0.973    0.00527
+    Red neuronal AR    0.988          1.085    0.600  0.840    1.86393
+      ML de árboles    0.994          1.091    0.541  0.973    0.14573
+
+-- AR(1) phi=0.9 --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+    AR(p) bayesiano     1.05          0.977    0.598  0.973    0.01213
+         Naive (RW)     1.07          1.000    0.608  0.933    0.00493
+       ARIMA (auto)     1.07          1.000    0.614  0.947    0.07380
+              MS-AR     1.07          1.000    0.614  0.947    0.14393
+    Red neuronal AR     1.09          1.015    0.603  0.947    1.79360
+ SETAR autoexcitado     1.09          1.019    0.618  0.960    0.03880
+      ML de árboles     1.13          1.055    0.644  0.947    0.14400
+
+-- ARMA(1,1) --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+ SETAR autoexcitado     0.98          0.911    0.566  0.960    0.03913
+    AR(p) bayesiano     1.05          0.975    0.595  0.960    0.01087
+       ARIMA (auto)     1.08          1.000    0.617  0.973    0.12127
+    Red neuronal AR     1.08          1.002    0.623  0.747    2.00433
+              MS-AR     1.10          1.024    0.633  0.933    0.16667
+         Naive (RW)     1.16          1.078    0.672  0.933    0.00527
+      ML de árboles     1.26          1.170    0.728  0.933    0.14607
+
+-- ARIMA(1,1,1) --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+              MS-AR     1.04          0.872    0.577  0.933     0.1533
+    AR(p) bayesiano     1.04          0.876    0.580  0.933     0.0132
+       ARIMA (auto)     1.19          1.000    0.670  0.920     0.1295
+    Red neuronal AR     1.20          1.005    0.701  0.787     1.8369
+ SETAR autoexcitado     1.21          1.019    0.678  0.907     0.0388
+         Naive (RW)     1.23          1.035    0.684  0.933     0.0050
+      ML de árboles     1.26          1.059    0.697  0.907     0.1415
+
+-- ARIMA(1,1,0) --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+       ARIMA (auto)     1.01           1.00    0.586  0.893    0.10227
+              MS-AR     1.03           1.02    0.599  0.880    0.15207
+    Red neuronal AR     1.05           1.04    0.592  0.907    1.78740
+    AR(p) bayesiano     1.06           1.05    0.612  0.893    0.01367
+ SETAR autoexcitado     1.07           1.06    0.601  0.907    0.03800
+      ML de árboles     1.09           1.07    0.635  0.947    0.14307
+         Naive (RW)     1.26           1.24    0.621  0.920    0.00533
+
+-- ARIMA(0,0,1) --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+       ARIMA (auto)    0.943           1.00    0.536  0.960    0.09100
+    AR(p) bayesiano    0.997           1.06    0.565  0.960    0.01140
+ SETAR autoexcitado    1.007           1.07    0.555  0.933    0.03807
+              MS-AR    1.017           1.08    0.586  0.960    0.15673
+    Red neuronal AR    1.021           1.08    0.572  0.907    1.86700
+      ML de árboles    1.124           1.19    0.646  0.933    0.14387
+         Naive (RW)    1.262           1.34    0.687  0.920    0.00507
+
+-- SETAR delta baja --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+    Red neuronal AR     1.01          0.986    0.581  0.920     1.7805
+              MS-AR     1.03          0.999    0.583  0.947     0.1567
+ SETAR autoexcitado     1.03          1.000    0.592  0.933     0.0373
+       ARIMA (auto)     1.03          1.000    0.572  0.933     0.0985
+    AR(p) bayesiano     1.04          1.010    0.587  0.933     0.0137
+      ML de árboles     1.06          1.026    0.578  0.947     0.1415
+         Naive (RW)     1.13          1.097    0.640  0.933     0.0050
+
+-- SETAR delta alta --
+           etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+              MS-AR    0.989          0.994    0.578  0.987     0.1506
+ SETAR autoexcitado    0.990          0.996    0.568  0.973     0.0389
+       ARIMA (auto)    0.995          1.000    0.572  0.973     0.0903
+    AR(p) bayesiano    1.002          1.007    0.572  0.973     0.0118
+         Naive (RW)    1.005          1.010    0.555  0.933     0.0052
+    Red neuronal AR    1.054          1.059    0.612  0.907     1.7812
+      ML de árboles    1.232          1.239    0.708  0.947     0.1421
+
+-- TAR umbral continuo --
+                etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+            ARIMA (auto)    0.959           1.00    0.540  0.947     0.0763
+ TAR umbral continuo (z)    0.993           1.03    0.556  0.880     0.0429
+                   MS-AR    0.997           1.04    0.573  0.920     0.1584
+         AR(p) bayesiano    1.022           1.07    0.572  0.960     0.0114
+      SETAR autoexcitado    1.062           1.11    0.609  0.907     0.0375
+         Red neuronal AR    1.112           1.16    0.730  0.787     1.9104
+              Naive (RW)    1.229           1.28    0.689  0.960     0.0052
+           ML de árboles    1.258           1.31    0.727  0.920     0.1440
+
+-- TAR umbral categórico --
+                  etiqueta rmse_med rmse_rel_arima crps_med picp95 tiempo_med
+ TAR umbral categórico (s)    0.976          0.950    0.561  0.933    0.01380
+                     MS-AR    1.011          0.983    0.549  0.920    0.15153
+           AR(p) bayesiano    1.026          0.998    0.592  0.947    0.01140
+              ARIMA (auto)    1.028          1.000    0.601  0.960    0.08520
+             ML de árboles    1.040          1.012    0.607  0.947    0.14007
+        SETAR autoexcitado    1.062          1.033    0.579  0.893    0.03753
+                Naive (RW)    1.168          1.136    0.674  0.947    0.00493
+           Red neuronal AR    1.272          1.237    0.727  0.800    1.92333
+
+=== Tiempo mediano de ajuste+pronóstico por modelo (segundos) ===
+               Naive (RW)           AR(p) bayesiano TAR umbral categórico (s) 
+                    0.005                     0.012                     0.014 
+       SETAR autoexcitado   TAR umbral continuo (z)              ARIMA (auto) 
+                    0.038                     0.043                     0.095 
+            ML de árboles                     MS-AR           Red neuronal AR 
+                    0.143                     0.155                     1.850 
+
+=== Tasa de éxito por modelo ===
+          AR(p) bayesiano              ARIMA (auto)             ML de árboles 
+                        1                         1                         1 
+                    MS-AR                Naive (RW)           Red neuronal AR 
+                        1                         1                         1 
+       SETAR autoexcitado TAR umbral categórico (s)   TAR umbral continuo (z) 
+                        1                         1                         1 
+
+Corrida definitiva con 200 réplicas, 15 orígenes, 40 celdas:
+  ~181 horas-núcleo | ~90 h con 2 núcleos | ~5.7 h con 32 núcleos
+
+Corrida definitiva con 500 réplicas, 15 orígenes, 40 celdas:
+  ~452 horas-núcleo | ~226 h con 2 núcleos | ~14.1 h con 32 núcleos
+
+(Costo medido por réplica en este piloto: 36.2 s-núcleo con 15 orígenes)
+
+Resultados en: /root/proyecto/resultados 

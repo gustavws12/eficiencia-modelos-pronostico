@@ -1,0 +1,353 @@
+---
+title: "Modelos de pronóstico temporal en finanzas: una comparación entre enfoques no lineales clásicos, deep learning y métodos bayesianos"
+author: "Gustavo W."
+date: "`r paste(format(Sys.Date(), '%d de'), c('enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre')[as.integer(format(Sys.Date(),'%m'))], format(Sys.Date(), 'de %Y'))`"
+lang: es
+geometry: margin=2.5cm
+fontsize: 11pt
+linestretch: 1.15
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+  word_document:
+    toc: true
+    number_sections: true
+bibliography: referencias.bib
+# Para estilo APA exacto: descargar apa.csl del repositorio de Citation Style
+# Language, dejarlo en manuscrito/ y descomentar la línea siguiente.
+# csl: apa.csl
+link-citations: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 150)
+RUTA_BASE <- normalizePath(file.path(dirname(knitr::current_input()), ".."),
+                           mustWork = FALSE)
+RUTA_RESULTADOS <- file.path(RUTA_BASE, "resultados")
+
+leer_si_existe <- function(archivo) {
+  f <- file.path(RUTA_RESULTADOS, archivo)
+  if (file.exists(f)) utils::read.csv(f, stringsAsFactors = FALSE) else NULL
+}
+ag   <- leer_si_existe("piloto_agregado.csv")     # sustituir por definitivo_agregado.csv
+agdm <- leer_si_existe("piloto_dm_agregado.csv")
+hay_resultados <- !is.null(ag)
+```
+
+> **Estado del documento.** Esqueleto de trabajo. La metodología está redactada
+> en su versión definitiva; las secciones de resultados leen automáticamente los
+> agregados de la simulación desde `resultados/`. Mientras solo exista la corrida
+> piloto, las cifras son ilustrativas y no deben citarse.
+
+# Introducción
+
+<!-- 1.200-1.500 palabras -->
+
+**Motivación.** El pronóstico de series financieras y macro-financieras enfrenta
+tres rasgos que los modelos lineales gaussianos no capturan: no linealidad en la
+dinámica condicional, cambios de régimen, y colas gruesas con volatilidad
+agrupada. La literatura ha respondido con tres programas de investigación que
+han avanzado en paralelo y rara vez se comparan bajo un protocolo común:
+(i) los modelos no lineales clásicos de umbral y de cambio de régimen
+[@tong1990; @hamilton1989]; (ii) el aprendizaje profundo y el aprendizaje de
+máquina; y (iii) los métodos bayesianos de series de tiempo.
+
+**Contribución.** Este artículo aporta tres elementos:
+
+1. Un **experimento Monte Carlo con procesos generadores conocidos** que aísla
+   las condiciones bajo las cuales cada familia domina. A diferencia de las
+   comparaciones basadas únicamente en datos reales, aquí se conoce la verdad y
+   es posible separar el sesgo de especificación de la varianza de estimación.
+2. Un tratamiento explícito y separado de los **mecanismos de umbral**: umbral
+   autoexcitado, umbral definido por una **variable continua exógena**, y umbral
+   definido por una **variable categórica observable**. Esta distinción, poco
+   frecuente en la literatura comparativa, es la que conecta el ejercicio
+   econométrico con la práctica de gestión de riesgo, donde el régimen a veces
+   se observa y a veces debe inferirse.
+3. Una evaluación que va más allá del error puntual, incorporando
+   **calibración de la densidad predictiva** (CRPS, cobertura, pérdida pinball)
+   y **costo computacional**, y que se cierra con una aplicación a ocho series
+   colombianas e internacionales de frecuencias distintas.
+
+**Preguntas de investigación.** (P1) ¿En qué contextos —tipo de proceso,
+frecuencia, ruido, presencia y forma de los regímenes— domina cada familia?
+(P2) ¿Cómo se comparan en interpretabilidad, costo y cuantificación de
+incertidumbre? (P3) ¿Qué implica esto para riesgo, asignación de activos y
+diseño de estrategias?
+
+# Revisión de literatura
+
+## Modelos de umbral y de cambio de régimen
+
+<!-- Tong (1990); Hamilton (1989, 1994 cap. 22); Kim y Nelson (1999);
+     Maitland-Smith (1999); estudio comparativo TAR/STR/MS-AR (2014). -->
+
+## Deep learning y aprendizaje de máquina en finanzas
+
+<!-- Chen, Hussain, Cauteruccio y Zhang (2025); EMAT (2025); DAFF-Net;
+     CNN-LSTM-Attention; MF-ConvLSTM-XAI; comparaciones LSTM/Transformer
+     vs. SARIMAX. -->
+
+## Métodos bayesianos
+
+<!-- Frühwirth-Schnatter (2006); BSTS; BVAR macro-financiero;
+     inferencia bayesiana para VaR. -->
+
+## Síntesis crítica
+
+<!-- Cuatro ejes: precisión predictiva, manejo de no linealidades,
+     cuantificación de incertidumbre, aplicabilidad. Identificar el vacío:
+     ausencia de un protocolo común con DGP conocido. -->
+
+# Metodología
+
+## Modelos
+
+### Autorregresivo de umbral (TAR / SETAR)
+
+Sea $q_t$ la variable de umbral y $r$ el valor de corte. El modelo TAR de dos
+regímenes con orden autorregresivo $p$ es
+
+$$
+y_t \;=\;
+\begin{cases}
+\phi_{0}^{(1)} + \sum_{i=1}^{p}\phi_{i}^{(1)} y_{t-i} + \sigma_1\varepsilon_t, & q_t \le r,\\[2pt]
+\phi_{0}^{(2)} + \sum_{i=1}^{p}\phi_{i}^{(2)} y_{t-i} + \sigma_2\varepsilon_t, & q_t > r,
+\end{cases}
+\qquad \varepsilon_t \sim \mathrm{iid}(0,1).
+$$
+
+Se consideran tres especificaciones de $q_t$:
+
+- **Autoexcitada (SETAR):** $q_t = y_{t-d}$, con retardo $d$ estimado.
+- **Continua exógena:** $q_t = z_{t-d}$, con $z_t$ observable (en la aplicación,
+  el spread EMBI de Colombia).
+- **Categórica observable:** el régimen no se obtiene de un corte sino de un
+  indicador $s_t \in \{1,\dots,K\}$ (en la aplicación, la fase del ciclo de
+  política monetaria).
+
+La estimación es por mínimos cuadrados condicionales: para cada candidato $r$ de
+una rejilla sobre los cuantiles $[0.15, 0.85]$ de $q_t$ se estima por MCO cada
+régimen y se elige el $r$ que minimiza la suma de cuadrados residual; $p$ y $d$
+se seleccionan por BIC. La densidad predictiva se obtiene simulando $B$
+trayectorias con remuestreo de los residuos específicos de cada régimen, lo que
+evita imponer normalidad y respeta la heterocedasticidad entre regímenes.
+
+### Autorregresivo con cambio de régimen markoviano (MS-AR)
+
+$$
+y_t = c_{S_t} + \sum_{i=1}^{p}\phi_{i,S_t}\,y_{t-i} + \sigma_{S_t}\varepsilon_t,
+\qquad
+\Pr(S_t=j \mid S_{t-1}=i) = p_{ij},
+$$
+
+con $S_t$ latente y matriz de transición $P=[p_{ij}]$ de primer orden
+[@hamilton1989; @hamilton1994]. La verosimilitud se evalúa con el filtro de
+Hamilton,
+
+$$
+\xi_{t\mid t} \;=\; \frac{(P'\xi_{t-1\mid t-1}) \odot \eta_t}
+{\mathbf{1}'\big[(P'\xi_{t-1\mid t-1}) \odot \eta_t\big]},
+\qquad
+\eta_t(j) = f(y_t \mid S_t=j, \mathcal{F}_{t-1}),
+$$
+
+y se maximiza numéricamente; $P$ se parametriza con un logit multinomial por
+filas para garantizar que sus entradas sean positivas y sumen uno. El número de
+regímenes $K \in \{2,3\}$ se elige por BIC. El pronóstico a $h$ pasos se obtiene
+simulando trayectorias del régimen desde $\xi_{T\mid T}$, de modo que la densidad
+predictiva es una mezcla y no una normal.
+
+La comparación TAR-categórico frente a MS-AR es informativa por construcción: en
+el DGP D8 el régimen es el mismo objeto, observable para el primero y latente
+para el segundo, de modo que la diferencia de desempeño mide el **valor de
+información** del indicador de régimen.
+
+### Modelo bayesiano autorregresivo
+
+$$
+y_t = \beta' x_t + \varepsilon_t,\quad \varepsilon_t\sim N(0,\sigma^2),\qquad
+\beta \mid \sigma^2 \sim N(b_0,\ \sigma^2 V_0),\quad
+\sigma^2 \sim \mathcal{IG}(a_0, d_0),
+$$
+
+con $x_t = (1, y_{t-1},\dots,y_{t-p})'$ y un prior de encogimiento tipo
+Minnesota: media de paseo aleatorio en el primer rezago y varianza
+$(\lambda/i)^2$ en el rezago $i$. La conjugación permite obtener la posterior en
+forma cerrada y simular la densidad predictiva exacta sin MCMC, lo que hace
+viable repetirla miles de veces en el experimento. En la aplicación empírica se
+amplía a un BSTS con componente de nivel local y a un BVAR para el bloque
+macro-financiero [@fruhwirth2006].
+
+### Aprendizaje de máquina y deep learning
+
+Ensambles de árboles sobre una ventana de $p=12$ rezagos, con pronóstico
+recursivo. La dispersión predictiva se calibra sobre un **holdout temporal**
+(último 20 % de la muestra de entrenamiento) y no sobre los residuos in-sample,
+que en un ensamble de árboles están sesgados a la baja y producirían intervalos
+espurios. Como representante de red neuronal en el experimento se usa una red
+autorregresiva feed-forward; en la aplicación empírica se incorporan LSTM, GRU,
+CNN-LSTM y arquitecturas con atención.
+
+## Diseño del experimento Monte Carlo
+
+Diez procesos generadores, dos tamaños muestrales ($T \in \{250, 1000\}$), dos
+niveles de ruido ($\sigma \in \{0.5, 2\}$) y tres horizontes ($h \in \{1,5,10\}$).
+El detalle completo de parámetros está en `protocolo/protocolo_simulacion.md`.
+
+```{r tabla-dgp}
+dgp_tab <- data.frame(
+  ID = c("D1a","D1b","D2","D3","D4","D5","D6a","D6b","D7","D8"),
+  Proceso = c("AR(1), phi=0.5","AR(1), phi=0.9","ARMA(1,1)","ARIMA(1,1,1)",
+              "ARIMA(1,1,0)","ARIMA(0,0,1)","SETAR (delta baja)",
+              "SETAR (delta alta)","TAR con umbral continuo exógeno",
+              "TAR con umbral categórico observable"),
+  Bloque = c(rep("Lineal",3), rep("Integrado",2), "Lineal",
+             rep("Umbral autoexcitado",2), "Umbral continuo", "Umbral categórico")
+)
+knitr::kable(dgp_tab, caption = "Procesos generadores del experimento.")
+```
+
+## Evaluación
+
+Partición 70/15/15 con origen móvil de ventana expansiva. Métricas: RMSE, MAE,
+MASE, $U$ de Theil; CRPS y pérdida pinball para la densidad predictiva; PICP y
+MPIW para los intervalos al 80 % y 95 %. Contraste de superioridad predictiva
+mediante Diebold–Mariano con corrección de muestra pequeña, tomando ARIMA como
+pivote, y reporte de la proporción de rechazos por celda. Se registra el tiempo
+de estimación y pronóstico de cada modelo.
+
+# Resultados
+
+```{r comunes, eval=hay_resultados}
+ORD_DGP <- c("D1a","D1b","D2","D3","D4","D5","D6a","D6b","D7","D8")
+ORD_MOD <- c("M0","M1","M2","M2z","M2s","M3","M4","M5","M6")
+NOM_MOD <- c(M0 = "Naive (RW)", M1 = "ARIMA", M2 = "SETAR",
+             M2z = "TAR umbral z", M2s = "TAR umbral s", M3 = "MS-AR",
+             M4 = "Bayesiano", M5 = "ML árboles", M6 = "Red neuronal")
+
+## matriz celda x modelo para una métrica y un horizonte
+matriz_metrica <- function(ag, metrica, hh = 1) {
+  d <- ag[ag$h == hh, ]
+  m <- tapply(d[[metrica]], list(d$dgp, d$modelo), function(x) x[1])
+  m <- m[intersect(ORD_DGP, rownames(m)), intersect(ORD_MOD, colnames(m)),
+         drop = FALSE]
+  m
+}
+etiquetas_dgp <- sapply(ORD_DGP, function(d) {
+  e <- unique(ag$etiqueta_dgp[ag$dgp == d]); if (length(e)) e[1] else d
+})
+## etiquetas cortas para los ejes de las figuras
+CORTAS <- c(D1a = "AR(1) 0,5", D1b = "AR(1) 0,9", D2 = "ARMA(1,1)",
+            D3 = "ARIMA(1,1,1)", D4 = "ARIMA(1,1,0)", D5 = "MA(1)",
+            D6a = "SETAR bajo", D6b = "SETAR alto",
+            D7 = "TAR umbral z", D8 = "TAR umbral s")
+```
+
+```{r resultados-h1, eval=hay_resultados}
+m1 <- matriz_metrica(ag, "rmse_rel_arima", 1)
+mejor <- apply(m1, 1, function(r) {
+  r2 <- r[names(r) != "M1"]
+  if (all(is.na(r2)) || min(r2, na.rm = TRUE) >= 1) "ARIMA"
+  else NOM_MOD[[names(which.min(r2))]]
+})
+tab <- data.frame(DGP = rownames(m1),
+                  Proceso = etiquetas_dgp[rownames(m1)],
+                  round(m1, 3), Mejor = unname(mejor),
+                  check.names = FALSE, stringsAsFactors = FALSE)
+knitr::kable(tab, row.names = FALSE, booktabs = TRUE,
+             caption = "RMSE relativo al benchmark ARIMA a un paso (valores < 1 indican mejor desempeño que ARIMA). Columnas: M0 naive, M1 ARIMA, M2 SETAR autoexcitado, M2z TAR con umbral continuo exógeno, M2s TAR con umbral categórico observable, M3 MS-AR, M4 AR(p) bayesiano, M5 ensamble de árboles, M6 red neuronal autorregresiva.")
+```
+
+```{r figura-rmse, eval=hay_resultados, fig.height=6.2, fig.width=7.5, fig.cap="RMSE relativo a ARIMA por proceso generador. Un panel por modelo; la línea punteada marca la paridad con ARIMA. Punto lleno: el modelo supera a ARIMA en esa celda."}
+m1 <- matriz_metrica(ag, "rmse_rel_arima", 1)
+## los dos TAR de umbral observable son excluyentes entre celdas: un panel
+paneles <- list(
+  list(id = "M0",  tit = "Naive (RW)"),
+  list(id = "M1",  tit = "ARIMA (referencia)"),
+  list(id = "M2",  tit = "SETAR autoexcitado"),
+  list(id = c("M2z","M2s"), tit = "TAR con umbral observable"),
+  list(id = "M3",  tit = "MS-AR"),
+  list(id = "M4",  tit = "AR(p) bayesiano"),
+  list(id = "M5",  tit = "Ensamble de árboles"),
+  list(id = "M6",  tit = "Red neuronal AR")
+)
+rango <- range(m1, na.rm = TRUE) * c(0.98, 1.02)
+dg <- rev(rownames(m1))
+op <- par(mfrow = c(2, 4), mar = c(2.6, 0.6, 2.0, 0.6), oma = c(1.4, 5.4, 0, 0.4),
+          mgp = c(1.5, 0.45, 0), tcl = -0.2, cex = 0.62)
+for (i in seq_along(paneles)) {
+  p <- paneles[[i]]
+  cols <- intersect(p$id, colnames(m1))
+  v <- if (length(cols) == 1) m1[dg, cols]
+       else apply(m1[dg, cols, drop = FALSE], 1, function(x)
+                  if (all(is.na(x))) NA else x[which(!is.na(x))[1]])
+  plot(NA, xlim = rango, ylim = c(0.5, length(dg) + 0.5),
+       yaxt = "n", xlab = "", ylab = "", main = p$tit, cex.main = 1.05,
+       font.main = 1, bty = "n")
+  abline(v = 1, lty = 2, col = "grey45")
+  abline(h = seq_along(dg), col = "grey92")
+  segments(1, seq_along(dg), v, seq_along(dg), col = "grey55")
+  points(v, seq_along(dg), pch = ifelse(v < 1, 19, 1), cex = 0.95)
+  if (i %% 4 == 1)
+    axis(2, at = seq_along(dg), labels = CORTAS[dg], las = 1,
+         cex.axis = 0.95, lwd = 0, lwd.ticks = 0, line = -0.4)
+}
+mtext("RMSE / RMSE(ARIMA)", side = 1, outer = TRUE, line = 0.2, cex = 0.7)
+par(op)
+```
+
+```{r resultados-dm, eval=!is.null(agdm)}
+d <- agdm[agdm$h == 1, ]
+md <- tapply(d$prop_mejor_sig, list(d$dgp, d$modelo), function(x) x[1])
+md <- md[intersect(ORD_DGP, rownames(md)), intersect(ORD_MOD, colnames(md)),
+         drop = FALSE]
+knitr::kable(data.frame(DGP = rownames(md), round(md, 2),
+                        check.names = FALSE),
+             row.names = FALSE, booktabs = TRUE,
+             caption = "Proporción de réplicas en que el modelo supera significativamente a ARIMA (Diebold-Mariano con corrección de muestra pequeña, 5 %). Con 15 orígenes por réplica la prueba tiene poca potencia; la corrida definitiva incorpora además un DM agrupado.")
+```
+
+```{r resultados-incertidumbre, eval=hay_resultados}
+inc <- aggregate(cbind(picp80, picp95, crps_med, mpiw95, tiempo_med,
+                       rmse_rel_arima) ~ etiqueta,
+                 data = ag[ag$h == 1, ], FUN = median, na.rm = TRUE)
+inc <- inc[order(inc$rmse_rel_arima), ]
+names(inc) <- c("Modelo", "PICP80", "PICP95", "CRPS", "MPIW95",
+                "Segundos", "RMSE rel.")
+knitr::kable(inc, digits = 3, row.names = FALSE, booktabs = TRUE,
+             caption = "Calibración de la densidad predictiva y costo computacional (mediana entre las diez celdas, h = 1). La cobertura nominal es 0,80 y 0,95: valores por debajo indican intervalos demasiado angostos.")
+```
+
+## Anexo empírico
+
+<!-- Ocho series: inflación, PIB, TRM, USD/EUR, Brent/WTI, COLCAP,
+     tasa de política / IBR, EMBI Colombia.
+     Tres bloques: macro (baja frecuencia), financiero (alta frecuencia),
+     régimen (EMBI como umbral continuo; ciclo de política como umbral
+     categórico). Backtesting de VaR (Kupiec, Christoffersen) y Sharpe de
+     una estrategia condicionada al régimen. -->
+
+# Discusión
+
+<!-- Contrastar H1-H6 con los resultados. Condiciones de dominancia por familia.
+     Limitaciones: costo computacional, requerimientos de datos, sobreajuste,
+     complejidad de implementación, dependencia de la calidad del indicador
+     de régimen. -->
+
+# Conclusiones e implicaciones
+
+<!-- Síntesis del mapa de dominancia condicional. Implicaciones para riesgo,
+     asignación de activos y trading. Líneas futuras: foundation models para
+     series de tiempo, híbridos bayesiano-profundos, información alternativa. -->
+
+# Referencias
